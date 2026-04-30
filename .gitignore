@@ -1,0 +1,22 @@
+# Terraform state
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Terraform local cache
+**/.terraform/
+
+# Providers cache
+.terraform/
+
+# AWS credentials
+.aws/
+credentials
+config
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
