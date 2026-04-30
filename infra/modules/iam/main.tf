@@ -61,55 +61,34 @@ resource "aws_iam_role_policy_attachment" "ecr" {
 
 ### Have already created Privider and Role
 ### Using OIDC Provider for GitHub - authentication - assume role
-resource "aws_iam_role" "github_actions" {
+data "aws_iam_role" "github_actions" {
   name = "Role_OIDC_aws-infra-eks"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Principal" : {
-          "Federated" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
-        },
-        "Action" : "sts:AssumeRoleWithWebIdentity",
-        "Condition" : {
-          "StringEquals" : {
-            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
-          },
-          "StringLike" : {
-            "token.actions.githubusercontent.com:sub" : "repo:${var.github_org}/${var.github_repo}:*"
-          }
-        }
-      }
-    ]
-  })
 }
 
 ### Restricted policy for production
 resource "aws_iam_policy" "terraform_ci" {
-  name = "terraform-ci-policy"
+  name = "${var.env}-terraform-ci-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       # EKS
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "eks:DescribeCluster",
           "eks:ListClusters",
           "eks:CreateCluster",
           "eks:DeleteCluster",
           "eks:UpdateClusterConfig"
         ]
-        Resource = "arn:aws:eks:*:*:cluster/*"
+        Resource = "arn:aws:eks:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:cluster/*"
       },
 
       # EC2 (node groups and VPC)
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "ec2:RunInstances",
           "ec2:TerminateInstances",
           "ec2:DescribeInstances",
@@ -125,14 +104,15 @@ resource "aws_iam_policy" "terraform_ci" {
           "ec2:DeleteSecurityGroup"
         ]
         Resource = [
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vpc/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:instance/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:vpc/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:subnet/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:security-group/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:network-interface/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*"
         ]
       },
+
       # Describe actions that require * resource
       {
         Effect = "Allow"
@@ -146,23 +126,91 @@ resource "aws_iam_policy" "terraform_ci" {
         Resource = "*"
       },
 
-      # S3 state backend - Permission de lister le bucket
+      # S3 state backend - Permission de lister et configurer le bucket
       {
-        Effect   = "Allow"
-        Action   = ["s3:ListBucket"]
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:GetBucketVersioning"
+        ]
         Resource = "arn:aws:s3:::eks-tfstate-project-unique-001"
       },
-      # S3 state backend - Read/Write only on the targeted environment
+
+      # S3 state backend - Read/Write/Delete (for Lock) on the environment
       {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject"]
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
         Resource = "arn:aws:s3:::eks-tfstate-project-unique-001/envs/${var.env}/*"
+      },
+
+      # KMS (Key Management Service) - Encryption keys
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:CreateKey",
+          "kms:DescribeKey",
+          "kms:EnableKeyRotation",
+          "kms:GetKeyRotationStatus",
+          "kms:UpdateKeyDescription",
+
+          "kms:CreateAlias",
+          "kms:UpdateAlias",
+          "kms:DeleteAlias",
+
+          "kms:PutKeyPolicy",
+          "kms:GetKeyPolicy",
+
+          "kms:CreateGrant",
+          "kms:ListGrants",
+          "kms:RevokeGrant",
+
+          "kms:ScheduleKeyDeletion",
+
+          "kms:TagResource",
+          "kms:UntagResource",
+          "kms:ListResourceTags"
+        ]
+        Resource = "arn:aws:kms:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:key/*"
+      },
+
+      # IAM (roles + policies management)
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:GetRole",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:PutRolePolicy"
+        ]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*"
+        ]
+      },
+
+      # IAM PassRole (REQUIRED for EKS and Node Groups)
+      {
+        Effect = "Allow"
+        Action = ["iam:PassRole"]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.env}-eks-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/terraform-*"
+        ]
       }
     ]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "terraform" {
-  role       = aws_iam_role.github_actions.name
+  role       = data.aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.terraform_ci.arn
 }

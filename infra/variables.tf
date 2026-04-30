@@ -48,7 +48,6 @@ variable "instance_types" {
 
 variable "github_org" {}
 variable "github_repo" {}
-
 ### variables for database
 variable "db_password" {
   description = "MySQL database password"
