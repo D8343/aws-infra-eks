@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    environment: production # Triggers manual approval in GitHub
+    environment: production
 
     steps:
       - name: Checkout repository
@@ -52,4 +52,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: infra
-        run: terraform apply -auto-approve -var-file=envs/prod/prod.tfvars
+        run: terraform apply -var-file=envs/prod/prod.tfvars
