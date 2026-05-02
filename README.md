@@ -17,7 +17,6 @@ It includes:
 - CI/CD pipelines using GitHub Actions
 - Managed MySQL database (Amazon RDS) deployed in private subnets
 
-
 ---
 
 ## Architecture
