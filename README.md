@@ -15,8 +15,11 @@ It includes:
 - Managed node groups
 - IAM roles and OIDC authentication
 - CI/CD pipelines using GitHub Actions
+<<<<<<< HEAD
 - Managed MySQL database (Amazon RDS) deployed in private subnets
 
+=======
+>>>>>>> 569a884 (docs: add project README with architecture, CI/CD, and Terraform structure)
 
 ---
 
@@ -35,7 +38,10 @@ It includes:
 - Amazon EKS cluster
 - EC2 node groups with autoscaling
 - IAM roles for secure access
+<<<<<<< HEAD
 - Managed MySQL database (Amazon RDS) in private subnets
+=======
+>>>>>>> 569a884 (docs: add project README with architecture, CI/CD, and Terraform structure)
 
 ---
 

@@ -49,7 +49,7 @@ jobs:
 
       # Security scan (IaC vulnerabilities)
       - name: Run tfsec security scan
-        uses: aquasecurity/tfsec-action@v1.0.0
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working_directory: infra
 

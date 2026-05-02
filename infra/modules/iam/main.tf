@@ -26,7 +26,6 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   role       = aws_iam_role.eks_cluster.name
 }
 
-
 ### IAM Roles for EKS Nodes
 resource "aws_iam_role" "eks_node" {
   name = "${var.env}-eks-node-role"
@@ -95,28 +94,23 @@ resource "aws_iam_policy" "terraform_ci" {
     Statement = [
       # EKS
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "eks:DescribeCluster",
           "eks:ListClusters",
           "eks:CreateCluster",
           "eks:DeleteCluster",
           "eks:UpdateClusterConfig"
         ]
-        Resource = "arn:aws:eks:*:*:cluster/*"
+        Resource = "arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/*"
       },
 
       # EC2 (node groups and VPC)
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "ec2:RunInstances",
           "ec2:TerminateInstances",
-          "ec2:DescribeInstances",
-          "ec2:DescribeVpcs",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups",
-          "ec2:DescribeRouteTables",
           "ec2:CreateVpc",
           "ec2:DeleteVpc",
           "ec2:CreateSubnet",
@@ -133,6 +127,7 @@ resource "aws_iam_policy" "terraform_ci" {
           "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
         ]
       },
+
       # Describe actions that require * resource
       {
         Effect = "Allow"
@@ -152,11 +147,61 @@ resource "aws_iam_policy" "terraform_ci" {
         Action   = ["s3:ListBucket"]
         Resource = "arn:aws:s3:::eks-tfstate-project-unique-001"
       },
+
       # S3 state backend - Read/Write only on the targeted environment
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:PutObject"]
         Resource = "arn:aws:s3:::eks-tfstate-project-unique-001/envs/${var.env}/*"
+      },
+
+      # KMS (Key Management Service) - Encryption keys
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:CreateKey",
+          "kms:DescribeKey",
+          "kms:EnableKeyRotation",
+          "kms:UpdateKeyDescription",
+          "kms:CreateAlias",
+          "kms:PutKeyPolicy",
+          "kms:ScheduleKeyDeletion"
+        ]
+        Resource = "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      },
+
+      # IAM (roles + policies management)
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:GetRole",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:PutRolePolicy"
+        ]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*"
+        ]
+      },
+
+      # IAM PassRole (LIMITED to Terraform / EKS roles)
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/terraform-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/staging-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/dev-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/prod-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/eks-*"
+        ]
       }
     ]
   })
