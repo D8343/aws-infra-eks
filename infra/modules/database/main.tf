@@ -23,13 +23,13 @@ resource "aws_security_group" "db" {
     security_groups = [var.eks_sg_id]
   }
 
-  # Recommended egress rule (unrestricted outbound traffic)
+  # Restrict egress to EKS cluster only
   egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "Allow outbound traffic only to EKS cluster"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [var.eks_sg_id]
   }
 
   tags = {
@@ -74,6 +74,9 @@ resource "aws_db_instance" "mysql" {
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.db.id]
   publicly_accessible    = false
+
+  # IAM Authentication
+  iam_database_authentication_enabled = true
 
   # High availability
   multi_az = var.multi_az

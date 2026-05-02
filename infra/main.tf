@@ -42,3 +42,19 @@ module "node_group" {
   max_size       = var.max_size
   instance_types = var.instance_types
 }
+
+module "database" {
+  source = "./modules/database"
+
+  env                = var.env
+  private_subnet_ids = module.vpc.private_subnet_ids
+
+  db_name           = var.db_name
+  username          = var.db_username
+  password          = var.db_password
+  instance_class    = var.instance_class
+  allocated_storage = var.allocated_storage
+
+  vpc_id    = module.vpc.vpc_id
+  eks_sg_id = module.eks.cluster_security_group_id
+}

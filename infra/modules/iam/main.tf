@@ -125,12 +125,12 @@ resource "aws_iam_policy" "terraform_ci" {
           "ec2:DeleteSecurityGroup"
         ]
         Resource = [
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vpc/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:instance/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:vpc/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:subnet/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:security-group/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:network-interface/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*"
         ]
       },
       # Describe actions that require * resource
@@ -157,6 +157,47 @@ resource "aws_iam_policy" "terraform_ci" {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:PutObject"]
         Resource = "arn:aws:s3:::eks-tfstate-project-unique-001/envs/${var.env}/*"
+      },
+
+      # KMS (Key Management Service) - Encryption keys
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:CreateKey",
+          "kms:DescribeKey",
+          "kms:EnableKeyRotation",
+          "kms:UpdateKeyDescription",
+          "kms:CreateAlias",
+          "kms:PutKeyPolicy",
+          "kms:ScheduleKeyDeletion"
+        ]
+        Resource = "*"
+      },
+
+      # IAM (roles + policies management)
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:GetRole",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:PutRolePolicy"
+        ]
+        Resource = "*"
+      },
+
+      # IAM PassRole (REQUIRED for EKS and Node Groups)
+      {
+        Effect = "Allow"
+        Action = ["iam:PassRole"]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.env}-eks-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/terraform-*"
+        ]
       }
     ]
   })
