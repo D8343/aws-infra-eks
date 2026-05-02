@@ -15,6 +15,8 @@ It includes:
 - Managed node groups
 - IAM roles and OIDC authentication
 - CI/CD pipelines using GitHub Actions
+- Managed MySQL database (Amazon RDS) deployed in private subnets
+
 
 ---
 
@@ -33,6 +35,7 @@ It includes:
 - Amazon EKS cluster
 - EC2 node groups with autoscaling
 - IAM roles for secure access
+- Managed MySQL database (Amazon RDS) in private subnets
 
 ---
 
@@ -59,35 +62,43 @@ Environments:
 ## Terraform Structure
 
 ```
+tree
 .
-├── backend.tf
-├── envs
-│   ├── dev
-│   │   └── dev.tfvars
-│   ├── prod
-│   │   └── prod.tfvars
-│   └── staging
-│       └── staging.tfvars
-├── main.tf
-├── modules
-│   ├── eks
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── iam
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── node-group
-│   │   ├── main.tf
-│   │   └── variables.tf
-│   └── vpc
-│       ├── main.tf
-│       ├── outputs.tf
-│       └── variables.tf
-├── providers.tf
-├── variables.tf
-└── versions.tf
+├── README.md
+├── infra
+│   ├── backend.tf
+│   ├── envs
+│   │   ├── dev
+│   │   │   └── dev.tfvars
+│   │   ├── prod
+│   │   │   └── prod.tfvars
+│   │   └── staging
+│   │       └── staging.tfvars
+│   ├── main.tf
+│   ├── modules
+│   │   ├── database
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   ├── eks
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   ├── iam
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   ├── node-group
+│   │   │   ├── main.tf
+│   │   │   └── variables.tf
+│   │   └── vpc
+│   │       ├── main.tf
+│   │       ├── outputs.tf
+│   │       └── variables.tf
+│   ├── providers.tf
+│   ├── variables.tf
+│   └── versions.tf
+└── scripts
 ```
 
 ---
@@ -119,5 +130,5 @@ This project is a learning and portfolio project demonstrating modern DevOps pra
 ## Tech Stack
 
 - Terraform
-- AWS (EKS, VPC, IAM, EC2)
+- AWS (EKS, VPC, IAM, EC2, RDS)
 - GitHub Actions
