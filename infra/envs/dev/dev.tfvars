@@ -27,3 +27,8 @@ desired_size   = 1
 min_size       = 1
 max_size       = 2
 instance_types = ["t3.small"]
+
+### OUIDC
+aws_account_id = "491085413530"
+github_org     = "D8343"
+github_repo    = "aws-infra-eks"

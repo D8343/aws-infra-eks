@@ -146,11 +146,17 @@ resource "aws_iam_policy" "terraform_ci" {
         Resource = "*"
       },
 
-      # S3 state backend
+      # S3 state backend - Permission de lister le bucket
+      {
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = "arn:aws:s3:::eks-tfstate-project-unique-001"
+      },
+      # S3 state backend - Read/Write only on the targeted environment
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:PutObject"]
-        Resource = "arn:aws:s3:::eks-tfstate-project-unique-001/*"
+        Resource = "arn:aws:s3:::eks-tfstate-project-unique-001/envs/${var.env}/*"
       }
     ]
   })
