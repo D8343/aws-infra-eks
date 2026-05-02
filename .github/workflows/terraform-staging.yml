@@ -1,0 +1,43 @@
+name: Terraform Staging
+
+on:
+  push:
+    branches: [ "staging" ]
+
+  pull_request:
+    branches: [ "staging" ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    environment: staging
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/Role_OIDC_aws-infra-eks
+          aws-region: eu-west-3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init -backend-config="key=envs/staging/terraform.tfstate"
+
+      - name: Terraform Plan
+        working-directory: infra
+        run: terraform plan -var-file=envs/staging/staging.tfvars
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve -var-file=envs/staging/staging.tfvars
