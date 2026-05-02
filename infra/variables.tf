@@ -48,3 +48,40 @@ variable "instance_types" {
 
 variable "github_org" {}
 variable "github_repo" {}
+
+### variables for database
+variable "db_password" {
+  description = "MySQL database password"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+  default     = "appdb"
+}
+
+variable "db_username" {
+  description = "Database username"
+  type        = string
+  default     = "admin"
+}
+
+variable "instance_class" {
+  description = "RDS instance type"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "allocated_storage" {
+  description = "Initial DB storage (GB)"
+  type        = number
+  default     = 20
+}
+
+variable "max_allocated_storage" {
+  description = "Maximum DB storage (autoscaling)"
+  type        = number
+  default     = 50
+}

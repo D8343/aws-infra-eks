@@ -3,15 +3,27 @@ name: Terraform Production
 on:
   workflow_dispatch:
 
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_env: prod
+
 permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: terraform-production
+  cancel-in-progress: false
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-    environment: production # Triggers manual approval in GitHub
+    environment: production
 
     steps:
       - name: Checkout repository
@@ -30,10 +42,14 @@ jobs:
         working-directory: infra
         run: terraform init -backend-config="key=envs/prod/terraform.tfstate"
 
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
       - name: Terraform Plan
         working-directory: infra
         run: terraform plan -var-file=envs/prod/prod.tfvars
 
       - name: Terraform Apply
         working-directory: infra
-        run: terraform apply -auto-approve -var-file=envs/prod/prod.tfvars
+        run: terraform apply -var-file=envs/prod/prod.tfvars
