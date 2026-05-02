@@ -1,58 +1,45 @@
-name: Terraform Dev
+name: Terraform Staging
 
-# Trigger pipeline on push to dev branch
 on:
-  pull_request:
-    branches: [ "dev" ]
-
   push:
-    branches: [ "dev" ]
+    branches: [ "staging" ]
 
-env:
-  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-  TF_VAR_env: dev
+  pull_request:
+    branches: [ "staging" ]
 
-concurrency:
-  group: terraform-dev
-  cancel-in-progress: true
-
-# Required permissions for AWS OIDC authentication
 permissions:
-  id-token: write # required for AWS AssumeRoleWithWebIdentity (OIDC)
-  contents: read # required to checkout repository
+  id-token: write
+  contents: read
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+
+    environment: staging
 
     steps:
-      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # AWS authentication using OIDC (no static credentials)
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/Role_OIDC_aws-infra-eks
           aws-region: eu-west-3
 
-      # Setup Terraform CLI
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Initialize Terraform backend (dev state)
       - name: Terraform Init
         working-directory: infra
-        run: terraform init -backend-config="key=envs/dev/terraform.tfstate"
+        run: terraform init -backend-config="key=envs/staging/terraform.tfstate"
 
       # Security scan (IaC vulnerabilities)
       - name: Install tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working-directory: infra
-
+          
       # Fmt Terraform configuration
       - name: Terraform Fmt
         working-directory: infra
@@ -63,7 +50,10 @@ jobs:
         working-directory: infra
         run: terraform validate
 
-      # Terraform Plan (preview infrastructure changes)
       - name: Terraform Plan
         working-directory: infra
-        run: terraform plan -var-file=envs/dev/dev.tfvars
+        run: terraform plan -var-file=envs/staging/staging.tfvars
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve -var-file=envs/staging/staging.tfvars
