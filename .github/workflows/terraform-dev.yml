@@ -48,10 +48,10 @@ jobs:
         run: terraform init -backend-config="key=envs/dev/terraform.tfstate"
 
       # Security scan (IaC vulnerabilities)
-      - name: Run tfsec security scan
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Install tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
-          working_directory: infra
+          working-directory: infra
 
       # Fmt Terraform configuration
       - name: Terraform Fmt

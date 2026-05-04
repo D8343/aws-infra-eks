@@ -44,21 +44,17 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Setup tfsec (Terraform security scanner)
-      - name: Install tfsec
-        uses: aquasecurity/tfsec-action@v1.0.0
-        with:
-          working-directory: infra
-
-      # Security scan (IaC vulnerabilities)
-      - name: Run tfsec security scan
-        run: tfsec infra
-
       # Terraform Init (S3 backend state)
       - name: Terraform Init
         working-directory: infra
         run: terraform init -backend-config="key=envs/staging/terraform.tfstate"
 
+      # Security scan (IaC vulnerabilities)
+      - name: Run tfsec security scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working-directory: infra
+          
       # Fmt Terraform configuration
       - name: Terraform Fmt
         working-directory: infra
