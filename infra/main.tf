@@ -14,9 +14,7 @@ module "vpc" {
 module "iam" {
   source = "./modules/iam"
 
-  env         = var.env
-  github_org  = var.github_org
-  github_repo = var.github_repo
+  env = var.env
 }
 
 module "eks" {

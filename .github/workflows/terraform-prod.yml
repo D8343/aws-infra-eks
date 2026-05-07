@@ -52,4 +52,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: infra
-        run: terraform apply -var-file=envs/prod/prod.tfvars
+        run: terraform apply -auto-approve -var-file=envs/prod/prod.tfvars
