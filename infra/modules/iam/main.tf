@@ -185,6 +185,9 @@ resource "aws_iam_policy" "terraform_ci" {
           "logs:DeleteLogGroup",
           "logs:DescribeLogGroups",
           "logs:ListTagsLogGroup",
+          "logs:ListTagsForResource",
+          "logs:TagResource",
+          "logs:UntagResource",
           "logs:PutRetentionPolicy"
         ]
         Resource = "arn:aws:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:log-group:*"
