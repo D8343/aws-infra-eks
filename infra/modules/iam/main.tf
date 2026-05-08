@@ -194,32 +194,9 @@ resource "aws_iam_policy" "terraform_ci" {
       },
       # KMS (Key Management Service) - Encryption keys
       {
-        Effect = "Allow"
-        Action = [
-          "kms:CreateKey",
-          "kms:DescribeKey",
-          "kms:EnableKeyRotation",
-          "kms:GetKeyRotationStatus",
-          "kms:UpdateKeyDescription",
-
-          "kms:CreateAlias",
-          "kms:UpdateAlias",
-          "kms:DeleteAlias",
-
-          "kms:PutKeyPolicy",
-          "kms:GetKeyPolicy",
-
-          "kms:CreateGrant",
-          "kms:ListGrants",
-          "kms:RevokeGrant",
-
-          "kms:ScheduleKeyDeletion",
-
-          "kms:TagResource",
-          "kms:UntagResource",
-          "kms:ListResourceTags"
-        ]
-        Resource = "arn:aws:kms:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:key/*"
+        Effect   = "Allow"
+        Action   = ["kms:*"]
+        Resource = "*"
       },
 
       # IAM (roles + policies management)
