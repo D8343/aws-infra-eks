@@ -29,4 +29,4 @@ max_size       = 3
 instance_types = ["t3.medium"]
 
 ### RDS
-instance_class = "db.t3.small"
+instance_class = "db.t3.medium"
