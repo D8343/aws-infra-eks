@@ -80,9 +80,19 @@ resource "aws_iam_policy" "terraform_ci" {
           "eks:ListClusters",
           "eks:CreateCluster",
           "eks:DeleteCluster",
-          "eks:UpdateClusterConfig"
+          "eks:UpdateClusterConfig",
+          "eks:CreateNodegroup",
+          "eks:DeleteNodegroup",
+          "eks:DescribeNodegroup",
+          "eks:ListNodegroups",
+          "eks:UpdateNodegroupConfig",
+          "eks:TagResource",
+          "eks:UntagResource"
         ]
-        Resource = "arn:aws:eks:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:cluster/*"
+        Resource = [
+          "arn:aws:eks:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:cluster/*",
+          "arn:aws:eks:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:nodegroup/*/*/*"
+        ]
       },
 
       # EC2 (node groups and VPC)
@@ -147,7 +157,38 @@ resource "aws_iam_policy" "terraform_ci" {
         ]
         Resource = "arn:aws:s3:::eks-tfstate-project-unique-001/envs/${var.env}/*"
       },
+      # RDS (Database)
+      {
+        Effect = "Allow"
+        Action = [
+          "rds:CreateDBInstance",
+          "rds:DeleteDBInstance",
+          "rds:DescribeDBInstances",
+          "rds:ModifyDBInstance",
+          "rds:CreateDBSubnetGroup",
+          "rds:DeleteDBSubnetGroup",
+          "rds:DescribeDBSubnetGroups",
+          "rds:ListTagsForResource",
+          "rds:AddTagsToResource"
+        ]
+        Resource = [
+          "arn:aws:rds:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:db:*",
+          "arn:aws:rds:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:subgrp:*"
+        ]
+      },
 
+      # CloudWatch Logs
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:DeleteLogGroup",
+          "logs:DescribeLogGroups",
+          "logs:ListTagsLogGroup",
+          "logs:PutRetentionPolicy"
+        ]
+        Resource = "arn:aws:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:log-group:*"
+      },
       # KMS (Key Management Service) - Encryption keys
       {
         Effect = "Allow"
@@ -214,3 +255,25 @@ resource "aws_iam_role_policy_attachment" "terraform" {
   role       = data.aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.terraform_ci.arn
 }
+
+### RDS Monitoring Role
+resource "aws_iam_role" "rds_monitoring" {
+  name = "${var.env}-rds-monitoring-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "monitoring.rds.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "rds_monitoring" {
+  role       = aws_iam_role.rds_monitoring.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
+

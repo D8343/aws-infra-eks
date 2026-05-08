@@ -94,6 +94,7 @@ resource "aws_db_instance" "mysql" {
   # Logging & monitoring
   enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]
   monitoring_interval             = 60
+  monitoring_role_arn             = var.monitoring_role_arn
   performance_insights_enabled    = true
   performance_insights_kms_key_id = aws_kms_key.rds.arn
 

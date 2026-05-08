@@ -55,4 +55,6 @@ module "database" {
 
   vpc_id    = module.vpc.vpc_id
   eks_sg_id = module.eks.cluster_security_group_id
+
+  monitoring_role_arn = module.iam.rds_monitoring_role_arn
 }
