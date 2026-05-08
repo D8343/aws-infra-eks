@@ -11,6 +11,4 @@ resource "aws_eks_node_group" "this" {
   }
 
   instance_types = var.instance_types
-
-  depends_on = []
 }

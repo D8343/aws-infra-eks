@@ -9,6 +9,9 @@ module "vpc" {
 
   cidr_block_private_subnets       = var.cidr_block_private_subnets
   availability_zone_subnet_private = var.availability_zone_subnet_private
+
+  # Ensure IAM policies are fully propagated before creating VPC resources (like Flow Logs)
+  depends_on = [module.iam]
 }
 
 module "iam" {
@@ -23,6 +26,9 @@ module "eks" {
   env                = var.env
   cluster_role_arn   = module.iam.eks_cluster_role_arn
   private_subnet_ids = module.vpc.private_subnet_ids
+
+  # Ensure IAM roles and policies are active before creating the EKS cluster and its KMS keys
+  depends_on = [module.iam]
 }
 
 
@@ -39,6 +45,9 @@ module "node_group" {
   min_size       = var.min_size
   max_size       = var.max_size
   instance_types = var.instance_types
+
+  # Node group requires both the EKS cluster to be ready and the node IAM role to be propagated
+  depends_on = [module.iam, module.eks]
 }
 
 module "database" {
@@ -57,4 +66,7 @@ module "database" {
   eks_sg_id = module.eks.cluster_security_group_id
 
   monitoring_role_arn = module.iam.rds_monitoring_role_arn
+
+  # Database depends on VPC networking, EKS security groups, and IAM monitoring roles
+  depends_on = [module.iam]
 }

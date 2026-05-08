@@ -113,6 +113,8 @@ resource "aws_nat_gateway" "this" {
     Name = "${var.env}-nat-gateway"
   }
 
+  # NAT Gateway requires an Internet Gateway to be fully functional and for clean destruction
+  depends_on = [aws_internet_gateway.this]
 }
 
 ### Private Route tables

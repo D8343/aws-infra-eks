@@ -53,8 +53,6 @@ resource "aws_eks_cluster" "this" {
     "controllerManager", # Controller manager activity (reconciliation loops)
     "scheduler"          # Pod scheduling decisions and events
   ]
-
-  depends_on = []
 }
 
 resource "aws_kms_key" "eks" {
